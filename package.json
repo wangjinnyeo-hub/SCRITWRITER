@@ -6,7 +6,7 @@
   "description": "Script Writer 웹 전용 (Vercel 배포용, 대시보드·배율·파일/EXE 기능 제외)",
   "scripts": {
     "dev": "npx vite",
-    "build": "npm install && node scripts/ensure-core-js-in-root.cjs && node ./node_modules/typescript/lib/tsc.js -b && npx vite build",
+    "build": "npm install && node scripts/ensure-core-js-in-root.cjs && node ./node_modules/typescript/lib/tsc.js -b && npx vite build && node scripts/remove-redirects-for-cloudflare.cjs",
     "preview": "npx vite preview"
   },
   "dependencies": {
