@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 // Vercel: commonjs 플러그인이 /vercel/path0/node_modules를 보지 못하므로,
 // core-js/* 를 현재 작업 디렉터리(script-writer-web)의 node_modules로 강제 해석하는 플러그인
 function coreJsResolver() {
@@ -19,7 +21,7 @@ function coreJsResolver() {
 
 export default defineConfig({
   base: '/',
-  plugins: [coreJsResolver(), react()],
+  plugins: [coreJsResolver(), react(), cloudflare()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src/core'),
