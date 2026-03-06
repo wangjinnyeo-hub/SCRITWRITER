@@ -140,7 +140,6 @@ function TerminologySection() {
   return (
     <div className="space-y-4">
       <SettingGroup label="유형 명칭">
-        <div className="text-[10px] text-muted-foreground mb-2">유형별 표시 명칭을 변경할 수 있습니다.</div>
         <div className="space-y-0">
           {ALL_TYPES.map(type => (
             <div key={type} className="flex items-center gap-2 py-1 border-b border-border/40 last:border-0">
@@ -195,12 +194,9 @@ function GeneralSection() {
             ))}
           </select>
         </SettingRow>
-        <div className="text-[10px] text-muted-foreground pl-2 mt-1">
-          빈 시나리오에서 더블클릭 또는 Enter로 시작할 때 사용할 유형입니다.
-        </div>
       </SettingGroup>
       <SettingGroup label="자동 순차 설정">
-        <SettingRow label="자동 숫자 입력">
+        <SettingRow label="자동 배경 숫자 할당">
           <input
             type="checkbox"
             checked={backgroundSeqEnabled}
@@ -208,9 +204,6 @@ function GeneralSection() {
             className="w-3.5 h-3.5"
           />
         </SettingRow>
-        <div className="text-[10px] text-muted-foreground pl-2 mt-1 mb-2">
-          배경 유형 추가 시 숫자 자동 할당. 끄면 비활성화됩니다.
-        </div>
         {backgroundSeqEnabled && (
           <>
             <SettingRow label="숫자 앞 단어">
@@ -229,9 +222,6 @@ function GeneralSection() {
                 className="h-6 text-xs px-1.5 min-w-[80px] max-w-[120px]"
               />
             </SettingRow>
-            <div className="text-[10px] text-muted-foreground pl-2 mt-1 mb-2">
-              예: 앞 &quot;S#&quot; + [숫자] + 뒤 &quot;&quot; → S#1, S#2...
-            </div>
             <SettingRow label="범위">
               <select
                 value={backgroundSeqScope}
@@ -242,9 +232,6 @@ function GeneralSection() {
                 <option value="plot">플롯(시나리오)별</option>
               </select>
             </SettingRow>
-            <div className="text-[10px] text-muted-foreground pl-2 mt-1">
-              플롯별은 시나리오마다 새로 시작.
-            </div>
           </>
         )}
       </SettingGroup>
@@ -296,9 +283,6 @@ function ShortcutsSection() {
         </SettingGroup>
       )}
       <SettingGroup label="# 단축키 매핑">
-        <div className="text-[10px] text-muted-foreground mb-2">
-          텍스트 시작 부분에 #을 입력 후 스페이스바를 누르면 해당 유형으로 전환합니다.
-        </div>
         {['#', '##', '###', '####'].map(pattern => (
           <div key={pattern} className="flex items-center gap-2">
             <code className="text-[10px] text-primary font-mono w-12 shrink-0">{pattern}</code>
@@ -325,18 +309,10 @@ function ShortcutsSection() {
             className="w-3.5 h-3.5"
           />
         </SettingRow>
-        {slashShortcutsEnabled && (
-          <div className="text-[10px] text-muted-foreground pl-2 mt-1">
-            아래에서 숫자 1~9에 할당할 유형을 지정합니다.
-          </div>
-        )}
       </SettingGroup>
 
       {slashShortcutsEnabled && (
         <SettingGroup label="숫자 1~9 할당">
-          <div className="text-[10px] text-muted-foreground mb-2">
-            / 팔레트에서 해당 숫자키로 선택할 항목을 지정합니다.
-          </div>
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(digit => {
             const options: { value: string; label: string }[] = [
               { value: 'action', label: propertyLabels.action },
@@ -393,9 +369,6 @@ function DirectionsSection() {
               className="w-3.5 h-3.5"
             />
           </SettingRow>
-          <div className="text-[10px] text-muted-foreground pl-2">
-            켜면 &quot; : &quot; 포함 줄을 대사로 인식하고, 캐릭터 이름과 매칭합니다.
-          </div>
         </SettingGroup>
       )}
       <SettingGroup label="연출 모드">
@@ -407,9 +380,6 @@ function DirectionsSection() {
             className="w-3.5 h-3.5"
           />
         </SettingRow>
-        <div className="text-[10px] text-muted-foreground pl-2">
-          비활성화 시 / 명령에서 연출 항목이 표시되지 않습니다.
-        </div>
       </SettingGroup>
 
       <SettingGroup label="연출 목록">
@@ -450,7 +420,7 @@ function DirectionsSection() {
 function SettingGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-2">{label}</div>
+      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1">{label}</div>
       <div className="space-y-1.5">{children}</div>
     </div>
   )
@@ -458,7 +428,7 @@ function SettingGroup({ label, children }: { label: string; children: React.Reac
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-0.5">
+    <div className="flex items-center gap-2 py-0.5">
       <span className="text-xs">{label}</span>
       {children}
     </div>

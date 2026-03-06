@@ -1,9 +1,10 @@
-import { useEffect, useRef, memo } from 'react'
+import { useEffect, useRef, useState, memo } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/store/settings/settingsStore'
+import { useUIStore } from '@/store/ui/uiStore'
 import { DragHandleIcon } from '@/components/ui/DragHandleIcon'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { PlotPButton } from '@/components/editor/PlotPButton'
@@ -22,6 +23,8 @@ export interface SortablePlotBoxProps {
   isConfirmed?: boolean
   /** 바로 위 박스도 확정인지(연속 확정 시 선 틈 없음) */
   isPreviousConfirmed?: boolean
+  /** 바로 아래 박스도 확정인지(좌측 선 애니메이션 방향: 위·아래 모두 확정 시 중앙 확산) */
+  isNextConfirmed?: boolean
   /** 예비 선택(선택됐으나 확정 아님) */
   isPreSelected?: boolean
   plotContentVisible: boolean
@@ -60,6 +63,7 @@ export const SortablePlotBox = memo(function SortablePlotBox({
   isSelected,
   isConfirmed = false,
   isPreviousConfirmed = false,
+  isNextConfirmed = false,
   isPreSelected = false,
   plotContentVisible,
   onActivate,
@@ -86,7 +90,37 @@ export const SortablePlotBox = memo(function SortablePlotBox({
   const displayTitle = titleOverride !== undefined ? titleOverride : (box.title || '')
   const displayContent = contentOverride !== undefined ? contentOverride : (box.content || '')
   const defaultFontFamily = useSettingsStore(state => state.defaultFontFamily)
+  const confirmChangeFromTrigger = useUIStore(state => state.confirmChangeFromTrigger)
+  const setConfirmChangeFromTrigger = useUIStore(state => state.setConfirmChangeFromTrigger)
+  const prevConfirmedRef = useRef(isConfirmed)
+  type LeftLineDirection = 'gradient' | 'from-top' | 'from-center'
+  const [unconfirmingLeftLine, setUnconfirmingLeftLine] = useState<LeftLineDirection | null>(null)
+  /** 확정 직후 트리거로 채우기 애니메이션 재생 중일 때만 true. 애니 끝나면 해제. */
+  const [confirmingLeftLine, setConfirmingLeftLine] = useState(false)
   const handleTapRef = useRef<{ downTime: number; downX: number; downY: number; moved: boolean } | null>(null)
+
+  useEffect(() => {
+    if (prevConfirmedRef.current && !isConfirmed) {
+      if (confirmChangeFromTrigger) {
+        if (isPreviousConfirmed && isNextConfirmed) setUnconfirmingLeftLine('from-center')
+        else if (isPreviousConfirmed && !isNextConfirmed) setUnconfirmingLeftLine('from-top')
+        else setUnconfirmingLeftLine('gradient')
+        setConfirmChangeFromTrigger(false)
+      }
+    } else if (!prevConfirmedRef.current && isConfirmed && confirmChangeFromTrigger) {
+      setConfirmingLeftLine(true)
+      setConfirmChangeFromTrigger(false)
+    }
+    prevConfirmedRef.current = isConfirmed
+  }, [isConfirmed, isPreviousConfirmed, isNextConfirmed, confirmChangeFromTrigger, setConfirmChangeFromTrigger])
+
+  const handleBoxAnimationEnd = (e: React.AnimationEvent) => {
+    if (e.animationName === 'plot-box-line-fill') {
+      if (unconfirmingLeftLine) setUnconfirmingLeftLine(null)
+      if (confirmingLeftLine) setConfirmingLeftLine(false)
+    }
+  }
+
   const {
     attributes,
     listeners,
@@ -145,13 +179,23 @@ export const SortablePlotBox = memo(function SortablePlotBox({
         e.stopPropagation()
         onContextMenuRequest?.(e, 'body', box.id)
       }}
+      onAnimationEnd={handleBoxAnimationEnd}
       className={cn(
-        'group relative p-3 cursor-pointer transition-colors border-b border-border select-none min-w-0',
+        'group relative p-3 cursor-pointer transition-[background-color] duration-150 ease-out border-b border-border select-none min-w-0',
         isDropOver && 'plot-box-drop-over',
         isDropOver && isConfirmed && 'plot-box-drop-over-confirmed',
-        // 확정: 왼쪽 선은 box-shadow로 표시 (드롭 오버 시에는 .plot-box-drop-over-confirmed에서 병합)
-        isConfirmed && !isDropOver && 'shadow-[inset_4px_0_0_0_var(--foreground)]',
+        // 확정: 위와 이어지면 좌측 선 전부 검정, 아니면 위쪽 투명 그라데이션. 채우기/역방향 애니메이션.
+        isConfirmed && isPreviousConfirmed && isNextConfirmed && confirmingLeftLine && 'plot-box-left-line-solid plot-box-left-line-anim-from-center',
+        isConfirmed && isPreviousConfirmed && isNextConfirmed && !confirmingLeftLine && 'plot-box-left-line-solid',
+        isConfirmed && isPreviousConfirmed && !isNextConfirmed && confirmingLeftLine && 'plot-box-left-line-solid plot-box-left-line-anim-from-top',
+        isConfirmed && isPreviousConfirmed && !isNextConfirmed && !confirmingLeftLine && 'plot-box-left-line-solid',
+        isConfirmed && !isPreviousConfirmed && confirmingLeftLine && 'plot-box-left-line-gradient',
+        isConfirmed && !isPreviousConfirmed && !confirmingLeftLine && 'plot-box-left-line-gradient-instant',
         isConfirmed && isPreviousConfirmed && 'border-t-0 -mt-px pt-[13px]',
+        // 비확정 시 좌측 선 역방향 애니메이션
+        !isConfirmed && !isDropOver && unconfirmingLeftLine === 'from-center' && 'plot-box-left-line-unconfirming plot-box-left-line-solid plot-box-left-line-anim-from-center',
+        !isConfirmed && !isDropOver && unconfirmingLeftLine === 'from-top' && 'plot-box-left-line-unconfirming plot-box-left-line-solid plot-box-left-line-anim-from-top',
+        !isConfirmed && !isDropOver && unconfirmingLeftLine === 'gradient' && 'plot-box-left-line-unconfirming plot-box-left-line-gradient',
         // 선택(예비): Ctrl/Shift 클릭 시에만 — 링 + 회색 배경
         isPreSelected && 'bg-muted',
         !isConfirmed && !isPreSelected && 'bg-background hover:bg-muted/20',

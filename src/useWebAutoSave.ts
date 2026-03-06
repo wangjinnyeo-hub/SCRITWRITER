@@ -1,29 +1,18 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useProjectStore } from '@/store/project/projectStore'
 import { useUIStore } from '@/store/ui/uiStore'
-import {
-  saveToLocalStorage,
-  attachWorkspaceLayout,
-  clearLocalStorageFile,
-} from '@/lib/fileIO'
-import { createGuideProject } from '@/domain/model'
+import { clearLocalStorageFile } from '@/lib/fileIO'
 import { getDefaultWorkspaceLayout } from '@/store/ui/uiStore'
-import type { SWFile } from '@/types'
+import { createGuideProject } from '@/domain/model'
 
-const AUTOSAVE_INTERVAL = 5000
-
+/**
+ * 웹: 진입·세션 변경 시 항상 새 가이드 파일 제공. 파일 저장 없음.
+ */
 export function useWebAutoSave() {
-  const file = useProjectStore((state: { file: SWFile | null }) => state.file)
-  const isDirty = useProjectStore((state: { isDirty: boolean }) => state.isDirty)
-  const markClean = useProjectStore((state: { markClean: () => void }) => state.markClean)
-  const loadProject = useProjectStore((state: { loadProject: (file: SWFile) => void }) => state.loadProject)
-  const lastSaveRef = useRef<number>(0)
-
-  // 진입 시 무조건 가이드. 재진입(새 탭/새로고침) 시 기존 저장 데이터는 쓰지 않고 새 가이드로 시작.
   useEffect(() => {
     clearLocalStorageFile()
     const guide = createGuideProject()
-    loadProject(guide)
+    useProjectStore.getState().loadProject(guide)
     useUIStore.getState().applyWorkspaceLayout(getDefaultWorkspaceLayout())
     const firstEp = guide.episodes[0]
     if (firstEp) {
@@ -32,39 +21,5 @@ export function useWebAutoSave() {
       if (firstBox) useUIStore.getState().setActivePlotBox(firstBox.id)
     }
     useUIStore.getState().setScreen('workspace')
-  }, [loadProject])
-
-  useEffect(() => {
-    if (!file || !isDirty) return
-    const layout = useUIStore.getState().getWorkspaceLayoutSnapshot()
-    const fileWithLayout = attachWorkspaceLayout(file, layout)
-    const doSave = () => {
-      saveToLocalStorage(fileWithLayout)
-      markClean()
-      lastSaveRef.current = Date.now()
-    }
-    const now = Date.now()
-    if (now - lastSaveRef.current >= AUTOSAVE_INTERVAL) {
-      doSave()
-    } else {
-      const t = setTimeout(doSave, AUTOSAVE_INTERVAL - (now - lastSaveRef.current))
-      return () => clearTimeout(t)
-    }
-  }, [file, isDirty, markClean])
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty && file) {
-        const f = useProjectStore.getState().file
-        if (f) {
-          const layout = useUIStore.getState().getWorkspaceLayoutSnapshot()
-          saveToLocalStorage(attachWorkspaceLayout(f, layout))
-        }
-        e.preventDefault()
-        e.returnValue = ''
-      }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [file, isDirty])
+  }, [])
 }

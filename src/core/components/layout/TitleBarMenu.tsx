@@ -235,18 +235,20 @@ export function TitleBarMenu() {
   const menuBtnClass = 'px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted rounded-sm h-6 transition-colors'
   return (
     <div ref={menuRef} className={cn('flex items-center h-full relative gap-1', openMenu && 'z-[100]')}>
-      <button
-        type="button"
-        onClick={() => setScreen('main')}
-        className="flex items-center justify-center shrink-0 w-5 h-5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        title="메인 화면"
-        aria-label="메인 화면"
-      >
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      </button>
+      {isDesktop() && (
+        <button
+          type="button"
+          onClick={() => setScreen('main')}
+          className="flex items-center justify-center shrink-0 w-5 h-5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          title="메인 화면"
+          aria-label="메인 화면"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </button>
+      )}
       <button
         type="button"
         onClick={() => setOpenMenu(openMenu === 'file' ? null : 'file')}
@@ -287,14 +289,18 @@ export function TitleBarMenu() {
             <span className="text-[9px] text-muted-foreground shrink-0">Ctrl+Shift+N</span>
           </button>
           <button type="button" onClick={() => { setOpenMenu(null); handleNewGuide() }} className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted rounded-sm">새 가이드 파일 생성</button>
-          <button type="button" onClick={() => { setOpenMenu(null); handleSave() }} className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted rounded-sm flex items-center justify-between gap-2">
-            저장
-            <span className="text-[9px] text-muted-foreground shrink-0">Ctrl+S</span>
-          </button>
-          <button type="button" onClick={() => { setOpenMenu(null); handleSaveAs() }} className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted rounded-sm flex items-center justify-between gap-2">
-            다른 이름으로 저장
-            <span className="text-[9px] text-muted-foreground shrink-0">Ctrl+Shift+S</span>
-          </button>
+          {isDesktop() && (
+            <>
+              <button type="button" onClick={() => { setOpenMenu(null); handleSave() }} className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted rounded-sm flex items-center justify-between gap-2">
+                저장
+                <span className="text-[9px] text-muted-foreground shrink-0">Ctrl+S</span>
+              </button>
+              <button type="button" onClick={() => { setOpenMenu(null); handleSaveAs() }} className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted rounded-sm flex items-center justify-between gap-2">
+                다른 이름으로 저장
+                <span className="text-[9px] text-muted-foreground shrink-0">Ctrl+Shift+S</span>
+              </button>
+            </>
+          )}
           <button type="button" onClick={() => { setOpenMenu(null); handleOpen() }} className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted rounded-sm flex items-center justify-between gap-2">
             열기
             <span className="text-[9px] text-muted-foreground shrink-0">Ctrl+O</span>

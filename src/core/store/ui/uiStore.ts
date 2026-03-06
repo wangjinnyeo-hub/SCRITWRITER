@@ -32,6 +32,8 @@ interface UIState {
   selectedPlotBoxIds: string[]
   /** 확정(시나리오 표시): 더블클릭·Enter로만 변경. 선택과 독립. */
   confirmedPlotBoxIds: string[]
+  /** P 클릭/더블클릭·새창·좌우반전 등 트리거로 확정 변경 시에만 true. 좌측선/P 아이콘 애니메이션용. */
+  confirmChangeFromTrigger: boolean
   leftPanelVisible: boolean
   plotPanelVisible: boolean
   scriptPanelVisible: boolean
@@ -75,7 +77,8 @@ interface UIState {
   setActiveEpisode: (id: string | null) => void
   setActivePlotBox: (id: string | null) => void
   setSelectedPlotBoxIds: (idsOrUpdater: string[] | ((prev: string[]) => string[])) => void
-  setConfirmedPlotBoxIds: (idsOrUpdater: string[] | ((prev: string[]) => string[])) => void
+  setConfirmedPlotBoxIds: (idsOrUpdater: string[] | ((prev: string[]) => string[]), options?: { animate?: boolean }) => void
+  setConfirmChangeFromTrigger: (value: boolean) => void
   setLeftPanelVisible: (visible: boolean) => void
   setPlotPanelVisible: (visible: boolean) => void
   setScriptPanelVisible: (visible: boolean) => void
@@ -142,6 +145,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   activePlotBoxId: null,
   selectedPlotBoxIds: [],
   confirmedPlotBoxIds: [],
+  confirmChangeFromTrigger: false,
   leftPanelVisible: true,
   plotPanelVisible: true,
   scriptPanelVisible: true,
@@ -196,8 +200,12 @@ export const useUIStore = create<UIState>((set, get) => ({
       }
     }),
   clearAllSelection: () => set({ selectedPlotBoxIds: [], selectedScriptUnitIds: [] }),
-  setConfirmedPlotBoxIds: (idsOrUpdater) =>
-    set((state) => ({ confirmedPlotBoxIds: applyArrayUpdater(state.confirmedPlotBoxIds, idsOrUpdater) })),
+  setConfirmedPlotBoxIds: (idsOrUpdater, options) =>
+    set((state) => ({
+      confirmedPlotBoxIds: applyArrayUpdater(state.confirmedPlotBoxIds, idsOrUpdater),
+      confirmChangeFromTrigger: options?.animate === true,
+    })),
+  setConfirmChangeFromTrigger: (value) => set({ confirmChangeFromTrigger: value }),
   setLeftPanelVisible: (visible) => set({ leftPanelVisible: visible }),
   setPlotPanelVisible: (visible) => set({ plotPanelVisible: visible }),
   setScriptPanelVisible: (visible) => set({ scriptPanelVisible: visible }),

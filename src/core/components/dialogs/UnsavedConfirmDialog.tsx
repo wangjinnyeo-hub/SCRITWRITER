@@ -1,6 +1,6 @@
 import { useUIStore } from '@/store/ui/uiStore'
 import { useProjectStore } from '@/store/project/projectStore'
-import { saveToLocalStorage, attachWorkspaceLayout } from '@/lib/fileIO'
+import { saveToLocalStorage, attachWorkspaceLayout, isDesktop } from '@/lib/fileIO'
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ export function UnsavedConfirmDialog() {
   const resolveUnsavedConfirm = useUIStore(state => state.resolveUnsavedConfirm)
 
   const handleChoice = (result: 'save' | 'discard' | 'cancel') => {
-    if (result === 'save') {
+    if (result === 'save' && isDesktop()) {
       const file = useProjectStore.getState().file
       if (file) {
         const layout = useUIStore.getState().getWorkspaceLayoutSnapshot()
@@ -54,13 +54,15 @@ export function UnsavedConfirmDialog() {
           >
             저장 안 함
           </button>
-          <button
-            type="button"
-            onClick={() => handleChoice('save')}
-            className="px-3 py-1.5 text-[11px] rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            저장
-          </button>
+          {isDesktop() && (
+            <button
+              type="button"
+              onClick={() => handleChoice('save')}
+              className="px-3 py-1.5 text-[11px] rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              저장
+            </button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

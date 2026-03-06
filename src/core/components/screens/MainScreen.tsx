@@ -1,8 +1,8 @@
 import { useProjectStore } from '@/store/project/projectStore'
-import { useUIStore } from '@/store/ui/uiStore'
+import { useUIStore, getDefaultWorkspaceLayout } from '@/store/ui/uiStore'
 import { useHistoryStore } from '@/store/history/historyStore'
 import { useRecentProjectsStore, getDedupedOrderedEntriesFrom, getUniqueProjectTitle, type RecentProjectEntry, type RecentSortMode } from '@/store/project/recentProjectsStore'
-import { openFromPath, loadFromPath, deserializeFile, isDesktop } from '@/lib/fileIO'
+import { openFromPath, loadFromPath, loadFromLocalStorage, deserializeFile, isDesktop } from '@/lib/fileIO'
 import { WindowTitleBar } from '@/components/layout/WindowTitleBar'
 import { useCallback, useState, useMemo, useEffect } from 'react'
 import {
@@ -70,6 +70,17 @@ export function MainScreen() {
   )
 
   const filePath = useProjectStore(state => state.filePath)
+
+  // 웹: localStorage에 저장된 세션이 있으면 최근 목록에 한 번 반영해 "이전 세션"이 보이게 함
+  useEffect(() => {
+    if (isDesktop()) return
+    const stored = loadFromLocalStorage()
+    if (!stored) return
+    const hasWebEntry = rawEntries.some(e => e.path === '')
+    if (!hasWebEntry) {
+      addOrUpdateRecent({ path: '', title: stored.project.title, episodeCount: stored.episodes.length })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 마운트 시 1회만
 
   useEffect(() => {
     if (!isDesktop() || !window.electron?.onOpenFileFromArg) return
@@ -158,6 +169,22 @@ export function MainScreen() {
           setFileOperationLoading(null)
           setLoadingPath(null)
         }
+      } else if (!isDesktop() && !entry.path) {
+        // 웹: 이전 세션(로컬 저장소) 불러오기
+        setFileOperationLoading('open')
+        try {
+          const loaded = loadFromLocalStorage()
+          if (loaded) {
+            openProjectAndGo(loaded, undefined)
+            const { applyWorkspaceLayout } = useUIStore.getState()
+            const layout = loaded.workspaceLayout ?? getDefaultWorkspaceLayout()
+            applyWorkspaceLayout(layout)
+          } else {
+            setFileErrorMessage('저장된 세션이 없습니다.')
+          }
+        } finally {
+          setFileOperationLoading(null)
+        }
       } else {
         setFileOperationLoading('open')
         try {
@@ -165,6 +192,8 @@ export function MainScreen() {
           if (opened) {
             const loaded = deserializeFile(opened.content)
             openProjectAndGo(loaded, opened.path || undefined)
+          } else {
+            setFileErrorMessage('파일을 열 수 없습니다.')
           }
         } finally {
           setFileOperationLoading(null)

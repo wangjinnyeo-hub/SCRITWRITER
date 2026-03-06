@@ -44,26 +44,22 @@ export function useKeyboardShortcuts() {
       category: 'file',
       shortcut: 'Ctrl+S',
       run: async () => {
+        if (!isDesktop()) return // 웹: 저장 비활성화
         try {
           const f = useProjectStore.getState().file
           if (!f) return
           const layout = useUIStore.getState().getWorkspaceLayoutSnapshot()
           const fileWithLayout = attachWorkspaceLayout(f, layout)
-          if (isDesktop()) {
-            const filePath = useProjectStore.getState().filePath
-            const pathToSave = filePath ?? (await getDefaultSavePath(f.project.title))
-            if (!pathToSave) return
-            const result = await saveToPath(fileWithLayout, pathToSave)
-            if (result.error) {
-              useUIStore.getState().setFileErrorMessage(result.error)
-              return
-            }
-            useProjectStore.getState().setFilePath(pathToSave)
-            useProjectStore.getState().markClean()
-          } else {
-            saveToLocalStorage(fileWithLayout)
-            useProjectStore.getState().markClean()
+          const filePath = useProjectStore.getState().filePath
+          const pathToSave = filePath ?? (await getDefaultSavePath(f.project.title))
+          if (!pathToSave) return
+          const result = await saveToPath(fileWithLayout, pathToSave)
+          if (result.error) {
+            useUIStore.getState().setFileErrorMessage(result.error)
+            return
           }
+          useProjectStore.getState().setFilePath(pathToSave)
+          useProjectStore.getState().markClean()
         } catch (err) {
           useUIStore.getState().setFileErrorMessage(err instanceof Error ? err.message : '작업을 완료할 수 없습니다.')
         }
@@ -105,24 +101,21 @@ export function useKeyboardShortcuts() {
       category: 'file',
       shortcut: 'Ctrl+Shift+S',
       run: async () => {
+        if (!isDesktop()) return // 웹: 다른 이름으로 저장 비활성화
         const f = useProjectStore.getState().file
         if (!f) return
         useUIStore.getState().setFileOperationLoading('save')
         try {
           const layout = useUIStore.getState().getWorkspaceLayoutSnapshot()
           const fileWithLayout = attachWorkspaceLayout(f, layout)
-          if (isDesktop()) {
-            const defaultName = `${sanitizeTitleForFilename(f.project.title)}.${DEFAULT_PROJECT_EXT}`
-            const newPath = await showSaveDialog(defaultName)
-            if (!newPath) return
-            const result = await saveToPath(fileWithLayout, newPath)
-            if (result.error) useUIStore.getState().setFileErrorMessage(result.error)
-            else {
-              useProjectStore.getState().setFilePath(newPath)
-              useProjectStore.getState().markClean()
-            }
-          } else {
-            downloadFile(fileWithLayout, `${sanitizeTitleForFilename(f.project.title)}.${DEFAULT_PROJECT_EXT}`)
+          const defaultName = `${sanitizeTitleForFilename(f.project.title)}.${DEFAULT_PROJECT_EXT}`
+          const newPath = await showSaveDialog(defaultName)
+          if (!newPath) return
+          const result = await saveToPath(fileWithLayout, newPath)
+          if (result.error) useUIStore.getState().setFileErrorMessage(result.error)
+          else {
+            useProjectStore.getState().setFilePath(newPath)
+            useProjectStore.getState().markClean()
           }
         } finally {
           useUIStore.getState().setFileOperationLoading(null)

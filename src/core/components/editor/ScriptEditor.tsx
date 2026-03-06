@@ -118,9 +118,12 @@ export function ScriptEditor({ episodeId, useExternalDndContext = false }: Scrip
   const workspaceDnd = useWorkspaceDndContext()
   const activeScriptDragIds = useExternalDndContext ? (workspaceDnd?.activeScriptDragIds ?? []) : localScriptDragIds
   const dropPlaceholderOverId = useExternalDndContext ? (workspaceDnd?.dropPlaceholderOverId ?? null) : localDropPlaceholderOverId
+  const uiScalePercent = useSettingsStore((s) => s.uiScalePercent)
   const scriptListRef = useRef<HTMLDivElement>(null)
   const scriptScrollContainerRef = useRef<HTMLDivElement>(null)
   const [scriptOverlayWidthLocal, setScriptOverlayWidthLocal] = useState(DRAG_OVERLAY_DEFAULT_WIDTH)
+  const [visibleSegmentIndices, setVisibleSegmentIndices] = useState<number[]>([])
+  const visibleSegmentIndicesRef = useRef<Set<number>>(new Set())
 
   useEffect(() => {
     if (!useExternalDndContext || !workspaceDnd?.setScriptOverlayWidth) return
@@ -385,6 +388,49 @@ export function ScriptEditor({ episodeId, useExternalDndContext = false }: Scrip
   }, [scrollToPlotBoxId, setScrollToPlotBoxId])
 
   useEffect(() => {
+    if (displayPlots.length < 2) return
+    const n = displayPlots.length
+    let cancelled = false
+    let disconnect: (() => void) | undefined
+    const rafId = requestAnimationFrame(() => {
+      const container = scriptScrollContainerRef.current
+      const listEl = scriptListRef.current
+      if (!container || !listEl || cancelled) return
+      const segmentEls = listEl.querySelectorAll('[data-plot-segment][data-segment-index]')
+      if (segmentEls.length === 0) {
+        setVisibleSegmentIndices((prev) => (prev.length === n ? prev : Array.from({ length: n }, (_, i) => i)))
+        return
+      }
+      const visible = visibleSegmentIndicesRef.current
+      visible.clear()
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (cancelled) return
+          entries.forEach((entry) => {
+            const idx = entry.target.getAttribute('data-segment-index')
+            if (idx == null) return
+            const i = parseInt(idx, 10)
+            if (!Number.isNaN(i) && entry.intersectionRatio > 0) visible.add(i)
+            else visible.delete(i)
+          })
+          const next = Array.from(visible).sort((a, b) => a - b)
+          setVisibleSegmentIndices((prev) =>
+            prev.length === next.length && prev.every((v, j) => v === next[j]) ? prev : next
+          )
+        },
+        { root: null, rootMargin: '0px', threshold: [0, 0.01, 1] }
+      )
+      segmentEls.forEach((el) => io.observe(el))
+      disconnect = () => io.disconnect()
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+      disconnect?.()
+    }
+  }, [displayPlots.length, segments.length])
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Enter' || e.shiftKey) return
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
@@ -576,7 +622,7 @@ export function ScriptEditor({ episodeId, useExternalDndContext = false }: Scrip
       const plotOrder = plotBoxesSorted.findIndex(p => p.id === segment.plot.id) + 1
       const groups = groupScriptUnitsByCharacter(segment.units, getCharacterName, getCharacterColor)
       return (
-        <div key={segment.plot.id} data-plot-segment={segment.plot.id} className={segmentIndex > 0 ? 'border-t border-border pt-3' : ''}>
+        <div key={segment.plot.id} data-plot-segment={segment.plot.id} data-segment-index={segmentIndex} className={segmentIndex > 0 ? 'border-t border-border pt-3' : ''}>
           {displayPlots.length >= 2 ? (
             <PlotDropZone plotId={segment.plot.id} plotLabel={`P${plotOrder}`} className="mb-2 flex min-h-[32px] w-full items-center border-l-2 border-border pl-2">
               <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[200px]">
@@ -820,6 +866,8 @@ export function ScriptEditor({ episodeId, useExternalDndContext = false }: Scrip
         updatePlotBox={updatePlotBox}
         setPalettePosition={setPalettePosition}
         openCommandPalette={openCommandPalette}
+        visibleSegmentIndices={visibleSegmentIndices}
+        uiScalePercent={uiScalePercent}
       />
 
       <div

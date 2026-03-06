@@ -553,17 +553,18 @@ export function PlotEditor({ episodeId, layoutMode, useExternalDndContext = fals
       const allUnconfirmed = confirmed.length === 0
       const allConfirmed = plotIds.length > 0 && plotIds.every(id => confirmed.includes(id))
       const thisConfirmed = confirmed.includes(boxId)
+      const animate = { animate: true }
 
       if (allUnconfirmed) {
-        setConfirmedPlotBoxIds([...plotIds])
+        setConfirmedPlotBoxIds([...plotIds], animate)
       } else if (thisConfirmed) {
         if (allConfirmed) {
-          setConfirmedPlotBoxIds([])
+          setConfirmedPlotBoxIds([], animate)
         } else {
-          setConfirmedPlotBoxIds([...plotIds])
+          setConfirmedPlotBoxIds([...plotIds], animate)
         }
       } else {
-        setConfirmedPlotBoxIds([boxId])
+        setConfirmedPlotBoxIds([boxId], animate)
         setSelectedPlotBoxIds([])
       }
     } catch (err) {
@@ -576,11 +577,12 @@ export function PlotEditor({ episodeId, layoutMode, useExternalDndContext = fals
   const handlePButtonClick = useCallback((boxId: string) => {
     const confirmed = confirmedPlotBoxIds
     const plotIds = plotBoxes.map(b => b.id)
+    const animate = { animate: true }
     if (confirmed.includes(boxId)) {
-      setConfirmedPlotBoxIds(confirmed.filter(id => id !== boxId))
+      setConfirmedPlotBoxIds(confirmed.filter(id => id !== boxId), animate)
     } else {
       const merged = [...new Set([...confirmed, boxId])].sort((a, b) => plotIds.indexOf(a) - plotIds.indexOf(b))
-      setConfirmedPlotBoxIds(merged)
+      setConfirmedPlotBoxIds(merged, animate)
     }
     setActivePlotBox(boxId)
   }, [confirmedPlotBoxIds, plotBoxes, setConfirmedPlotBoxIds, setActivePlotBox])
@@ -1144,6 +1146,7 @@ export function PlotEditor({ episodeId, layoutMode, useExternalDndContext = fals
                   isSelected={selectedPlotBoxIds.includes(box.id)}
                   isConfirmed={confirmedPlotBoxIds.includes(box.id)}
                   isPreviousConfirmed={index > 0 && confirmedPlotBoxIds.includes(plotBoxes[index - 1].id)}
+                  isNextConfirmed={index + 1 < plotBoxes.length && confirmedPlotBoxIds.includes(plotBoxes[index + 1].id)}
                   isPreSelected={selectedPlotBoxIds.includes(box.id)}
                   plotContentVisible={plotContentVisible}
                   onActivate={(e) => handleBoxActivate(e, box.id)}
@@ -1192,6 +1195,7 @@ export function PlotEditor({ episodeId, layoutMode, useExternalDndContext = fals
                     isSelected={selectedPlotBoxIds.includes(box.id)}
                     isConfirmed={confirmedPlotBoxIds.includes(box.id)}
                     isPreviousConfirmed={index > 0 && confirmedPlotBoxIds.includes(plotBoxes[index - 1].id)}
+                    isNextConfirmed={index + 1 < plotBoxes.length && confirmedPlotBoxIds.includes(plotBoxes[index + 1].id)}
                     isPreSelected={selectedPlotBoxIds.includes(box.id)}
                     plotContentVisible={plotContentVisible}
                     onActivate={(e) => handleBoxActivate(e, box.id)}

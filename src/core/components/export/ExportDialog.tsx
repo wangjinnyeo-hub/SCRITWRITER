@@ -64,8 +64,6 @@ export function ExportDialog({
   )
   const [notice, setNotice] = useState<{ tone: NoticeTone; text: string } | null>(null)
   const [isExporting, setIsExporting] = useState(false)
-  const [plotGroupOpen, setPlotGroupOpen] = useState(false)
-  const [dialogueGroupOpen, setDialogueGroupOpen] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -268,202 +266,122 @@ export function ExportDialog({
       size="medium"
       description="내보낼 형식, 포함 유형, 플롯을 선택해 결과를 생성합니다."
     >
-      <div className="flex-1 overflow-auto px-4 py-3 space-y-4 flex flex-col min-h-0">
-          <section>
-            <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">내보내기 형식</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { value: 'clipstudio', label: '클립스튜디오' },
-                { value: 'pdf', label: 'PDF' },
-                { value: 'txt', label: 'TXT' },
-                { value: 'markdown', label: '마크다운' },
-              ].map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setFormat(value as ExportFormat)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-                    format === value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )}
-                  aria-pressed={format === value}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {format === 'clipstudio' && (
-              <p className="text-[10px] text-muted-foreground mt-1.5">
-                클립스튜디오 형식: 모든 줄바꿈이 큰 문단 단위로 변환됩니다
-              </p>
-            )}
-          </section>
+      <div className="flex-1 overflow-auto px-4 py-3 flex flex-col min-h-0">
+          <div className="flex gap-4 min-h-0">
+            {/* 좌측: 내보내기 형식(가로) + 포함할 유형(세로) */}
+            <div className="flex-1 min-w-0 flex flex-col gap-3">
+              <section>
+                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">내보내기 형식</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { value: 'clipstudio', label: '클립스튜디오' },
+                    { value: 'pdf', label: 'PDF' },
+                    { value: 'txt', label: 'TXT' },
+                    { value: 'markdown', label: '마크다운' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setFormat(value as ExportFormat)}
+                      className={cn(
+                        'px-3 py-1.5 rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                        format === value
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                      aria-pressed={format === value}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {format === 'clipstudio' && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">클립스튜디오 형식: 모든 줄바꿈이 큰 문단 단위로 변환됩니다</p>
+                )}
+              </section>
 
-          <section>
-            <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">포함할 유형</h3>
-            <div className="space-y-2">
-              <div className="border border-border rounded-md overflow-hidden bg-muted/10">
-                <button
-                  type="button"
-                  onClick={() => setPlotGroupOpen(v => !v)}
-                  className="w-full flex items-center justify-between px-2.5 py-1.5 text-left text-xs font-medium hover:bg-muted/50"
-                >
-                  <span>플롯박스</span>
-                  <span className="text-muted-foreground">{plotGroupOpen ? '▲' : '▼'}</span>
-                </button>
-                {plotGroupOpen && (
-                  <div className="px-2.5 pb-2 flex flex-wrap gap-x-4 gap-y-0.5">
-                    <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={includeProperties.plotBoxTitle}
-                        onChange={() => handleToggleProperty('plotBoxTitle')}
-                        className="w-3 h-3 rounded border-input"
-                      />
-                      <span className="text-xs">플롯박스 제목</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={includeProperties.plotBoxSeparator}
-                        onChange={() => handleToggleProperty('plotBoxSeparator')}
-                        className="w-3 h-3 rounded border-input"
-                      />
-                      <span className="text-xs">구분선</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={includeProperties.plotBoxContent}
-                        onChange={() => handleToggleProperty('plotBoxContent')}
-                        className="w-3 h-3 rounded border-input"
-                      />
-                      <span className="text-xs">내 플롯 내용</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={includeProperties.dialogue || includeProperties.action || includeProperties.narration || includeProperties.background || includeProperties.direction}
-                        onChange={() => {
-                          const on = !(includeProperties.dialogue || includeProperties.action || includeProperties.narration || includeProperties.background || includeProperties.direction)
-                          setIncludeProperties(prev => ({ ...prev, dialogue: on, action: on, narration: on, background: on, direction: on }))
-                        }}
-                        className="w-3 h-3 rounded border-input"
-                      />
-                      <span className="text-xs">플롯박스 내용</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-              <div className="border border-border rounded-md overflow-hidden bg-muted/10">
-                <button
-                  type="button"
-                  onClick={() => setDialogueGroupOpen(v => !v)}
-                  className="w-full flex items-center justify-between px-2.5 py-1.5 text-left text-xs font-medium hover:bg-muted/50"
-                >
-                  <span>대사</span>
-                  <span className="text-muted-foreground">{dialogueGroupOpen ? '▲' : '▼'}</span>
-                </button>
-                {dialogueGroupOpen && (
-                  <div className="px-2.5 pb-2 flex flex-wrap gap-x-4 gap-y-0.5">
-                    <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={includeProperties.characterName}
-                        onChange={() => handleToggleProperty('characterName')}
-                        className="w-3 h-3 rounded border-input"
-                      />
-                      <span className="text-xs">캐릭터 이름</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={includeProperties.dialogueLine ?? true}
-                        onChange={() => handleToggleProperty('dialogueLine')}
-                        className="w-3 h-3 rounded border-input"
-                      />
-                      <span className="text-xs">대사선(좌측선)</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5 pt-1 border-t border-border/50">
-                <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={includeProperties.projectTitle}
-                    onChange={() => handleToggleProperty('projectTitle')}
-                    className="w-3 h-3 rounded border-input"
-                  />
-                  <span className="text-xs">프로젝트 제목</span>
-                </label>
-                <label className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={includeProperties.episodeTitle}
-                    onChange={() => handleToggleProperty('episodeTitle')}
-                    className="w-3 h-3 rounded border-input"
-                  />
-                  <span className="text-xs">에피소드 제목</span>
-                </label>
-                {(['dialogue', 'action', 'narration', 'background', 'direction'] as const).map(key => (
-                  <label key={key} className="flex items-center gap-1.5 py-1 cursor-pointer hover:text-foreground">
+              <section className="flex-1 min-h-0 flex flex-col">
+                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">포함할 유형</h3>
+                <div className="border border-border rounded-md overflow-auto bg-muted/10 flex-1 min-h-0 space-y-0.5 py-1.5 px-2">
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.plotBoxTitle} onChange={() => handleToggleProperty('plotBoxTitle')} className="w-3 h-3 rounded border-input" />
+                    <span>플롯박스 제목</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.plotBoxSeparator} onChange={() => handleToggleProperty('plotBoxSeparator')} className="w-3 h-3 rounded border-input" />
+                    <span>구분선</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.plotBoxContent} onChange={() => handleToggleProperty('plotBoxContent')} className="w-3 h-3 rounded border-input" />
+                    <span>내 플롯 내용</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
                     <input
                       type="checkbox"
-                      checked={includeProperties[key]}
-                      onChange={() => handleToggleProperty(key)}
+                      checked={includeProperties.dialogue || includeProperties.action || includeProperties.narration || includeProperties.background || includeProperties.direction}
+                      onChange={() => {
+                        const on = !(includeProperties.dialogue || includeProperties.action || includeProperties.narration || includeProperties.background || includeProperties.direction)
+                        setIncludeProperties(prev => ({ ...prev, dialogue: on, action: on, narration: on, background: on, direction: on }))
+                      }}
                       className="w-3 h-3 rounded border-input"
                     />
-                    <span className="text-xs">{propertyLabels[key]}</span>
+                    <span>플롯박스 내용</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.characterName} onChange={() => handleToggleProperty('characterName')} className="w-3 h-3 rounded border-input" />
+                    <span>캐릭터 이름</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.dialogueLine ?? true} onChange={() => handleToggleProperty('dialogueLine')} className="w-3 h-3 rounded border-input" />
+                    <span>대사선(좌측선)</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.projectTitle} onChange={() => handleToggleProperty('projectTitle')} className="w-3 h-3 rounded border-input" />
+                    <span>프로젝트 제목</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                    <input type="checkbox" checked={includeProperties.episodeTitle} onChange={() => handleToggleProperty('episodeTitle')} className="w-3 h-3 rounded border-input" />
+                    <span>에피소드 제목</span>
+                  </label>
+                  {(['dialogue', 'action', 'narration', 'background', 'direction'] as const).map(key => (
+                    <label key={key} className="flex items-center gap-1.5 py-0.5 cursor-pointer hover:text-foreground text-xs">
+                      <input type="checkbox" checked={includeProperties[key]} onChange={() => handleToggleProperty(key)} className="w-3 h-3 rounded border-input" />
+                      <span className="truncate">{propertyLabels[key]}</span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            {/* 우측: 플롯 선택 세로 나열 */}
+            <section className="w-48 shrink-0 flex flex-col min-h-0">
+              <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">플롯 선택</h3>
+              <div className="border border-border rounded-md overflow-auto bg-muted/20 flex-1 min-h-0">
+                {plotBoxes.map((box, index) => (
+                  <label
+                    key={box.id}
+                    className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-muted/60 cursor-pointer border-b border-border/50 last:border-0"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedPlotBoxIds.has(box.id)}
+                      onChange={() => handleTogglePlotBox(box.id)}
+                      className="w-3 h-3 rounded border-input"
+                    />
+                    <span className="text-xs truncate">
+                      P{index + 1}
+                      {box.title && <span className="text-muted-foreground"> — {box.title}</span>}
+                    </span>
                   </label>
                 ))}
               </div>
-            </div>
-          </section>
-
-          <section>
-            <div className="flex items-center justify-between mb-1.5">
-              <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">플롯 선택</h3>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleSelectAllPlots}
-                  className="text-[10px] text-primary hover:underline py-0.5"
-                >
-                  전체 선택
-                </button>
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                <button type="button" onClick={handleSelectAllPlots} className="text-[10px] text-primary hover:underline py-0.5">전체 선택</button>
                 <span className="text-muted-foreground/60">·</span>
-                <button
-                  type="button"
-                  onClick={handleDeselectAllPlots}
-                  className="text-[10px] text-primary hover:underline py-0.5"
-                >
-                  전체 해제
-                </button>
+                <button type="button" onClick={handleDeselectAllPlots} className="text-[10px] text-primary hover:underline py-0.5">전체 해제</button>
               </div>
-            </div>
-            <div className="border border-border rounded-md max-h-36 overflow-auto bg-muted/20">
-              {plotBoxes.map((box, index) => (
-                <label
-                  key={box.id}
-                  className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-muted/60 cursor-pointer border-b border-border/50 last:border-0"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedPlotBoxIds.has(box.id)}
-                    onChange={() => handleTogglePlotBox(box.id)}
-                    className="w-3 h-3 rounded border-input"
-                  />
-                  <span className="text-xs truncate">
-                    P{index + 1}
-                    {box.title && <span className="text-muted-foreground"> — {box.title}</span>}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </section>
+            </section>
+          </div>
       </div>
 
       <div className="border-t border-border px-4 py-3 space-y-2 bg-[var(--panel-header)]/50 shrink-0">
