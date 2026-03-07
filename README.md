@@ -1,14 +1,18 @@
 # Script Writer Web (SWW) — 배포용
 
 이 폴더는 **Cloudflare Pages** 배포 전용입니다.  
-빌드 산출물만 포함되어 있으며, 소스/개발 의존성은 포함하지 않습니다.
+**이미 빌드된 정적 파일**만 포함되어 있으며, `package.json`·소스·개발 의존성은 없습니다.
 
-## 배포
+## Cloudflare Pages 설정 (필수)
 
-- **대상**: Cloudflare Pages (Assets)
-- **출력 디렉터리**: `.` (이 폴더 루트)
-- GitHub 저장소에 이 폴더 내용만 푸시한 뒤 Cloudflare에서 해당 저장소를 연결하면 됩니다.
-- `wrangler.toml`에서 `[assets] directory = "."` 로 설정되어 있습니다.
+저장소 연결 후 **빌드 단계를 실행하면 안 됩니다.** (npm run build 불필요)
+
+- **Framework preset**: None (또는 None으로 설정)
+- **Build command**: **비워 두기** (빈 칸) — 또는 `echo "No build"` 등 아무 명령
+- **Build output directory**: ` . ` (루트, 즉 이 저장소 루트)
+- **Root directory**: 비워 두기 (저장소 루트 사용)
+
+이렇게 하면 Cloudflare가 `npm run build`를 실행하지 않고, 푸시된 `index.html`과 `assets/`를 그대로 서빙합니다.
 
 ## 포함 내용
 
