@@ -1,17 +1,18 @@
-# Script Writer (웹 프로토타입)
+# Script Writer Web (SWW) — 배포용
 
-시나리오 에디터 웹 버전. **단일 폴더로 독립 동작**하며, 다른 레포에 복사해 그대로 배포할 수 있습니다.
+이 폴더는 **Cloudflare Pages** 배포 전용입니다.  
+빌드 산출물만 포함되어 있으며, 소스/개발 의존성은 포함하지 않습니다.
 
-- `npm install` → `npm run build` → `dist` 배포 (Vercel 등)
-- 대시보드·배율·파일/EXE 기능 없음, 에디터 핵심만 포함
+## 배포
 
-## 로컬 실행
+- **대상**: Cloudflare Pages (Assets)
+- **출력 디렉터리**: `.` (이 폴더 루트)
+- GitHub 저장소에 이 폴더 내용만 푸시한 뒤 Cloudflare에서 해당 저장소를 연결하면 됩니다.
+- `wrangler.toml`에서 `[assets] directory = "."` 로 설정되어 있습니다.
 
-```bash
-npm install
-npm run dev
-```
+## 포함 내용
 
-## 배포 (Vercel)
-
-이 폴더만 새 GitHub 저장소에 넣고, Vercel에서 해당 저장소 연결 후 배포하면 됩니다. `vercel.json`이 이미 포함되어 있습니다.
+- `index.html` — 진입점
+- `assets/` — JS, CSS 번들
+- `_redirects` — SPA 라우팅(모든 경로 → index.html 200)
+- `wrangler.toml` — Cloudflare 설정

@@ -1,6 +1,0 @@
-# SPA fallback (Cloudflare Pages 배포 기준)
-# Cloudflare 10021 방지: /, /index, /index.html 을 먼저 명시 (무한 리다이렉트 방지)
-/              /index.html   200
-/index         /index.html   200
-/index.html    /index.html   200
-/*             /index.html   200
