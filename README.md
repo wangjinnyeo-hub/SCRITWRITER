@@ -20,3 +20,4 @@
 - `assets/` — JS, CSS 번들
 - `_redirects` — SPA 라우팅(모든 경로 → index.html 200)
 - `wrangler.toml` — Cloudflare 설정
+- `package.json` — Build command가 `npm run build`일 때 실패 방지용(no-op 스크립트만 포함)

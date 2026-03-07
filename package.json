@@ -1,0 +1,8 @@
+{
+  "name": "script-writer-web-deploy",
+  "private": true,
+  "description": "SWW pre-built static deploy — no actual build",
+  "scripts": {
+    "build": "echo Pre-built static site; no build step."
+  }
+}
