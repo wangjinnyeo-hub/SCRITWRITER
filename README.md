@@ -18,6 +18,7 @@
 
 - `index.html` — 진입점
 - `assets/` — JS, CSS 번들
-- `_redirects` — SPA 라우팅(모든 경로 → index.html 200)
 - `wrangler.toml` — Cloudflare 설정
 - `package.json` — Build command가 `npm run build`일 때 실패 방지용(no-op 스크립트만 포함)
+
+`_redirects`는 Cloudflare에서 `/* /index.html 200` 사용 시 무한 루프(에러 10021)가 발생해 제거함. Pages는 매칭되지 않는 경로를 index.html로 서빙할 수 있음. 필요 시 대시보드 Redirect Rule로 SPA 폴백 처리.
